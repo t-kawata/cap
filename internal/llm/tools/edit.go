@@ -42,6 +42,12 @@ type editTool struct {
 	files       history.Service
 }
 
+// ルーン情報を保持する構造体
+type RuneInfo struct {
+	Start int // ルーンの開始バイト位置
+	End   int // ルーンの終了バイト位置（次のバイト位置）
+}
+
 const (
 	EditToolName    = "edit"
 	editDescription = `Edits files by replacing text, creating new files, or deleting content. For moving or renaming files, use the Bash tool with the 'mv' command instead. For larger file edits, use the FileWrite tool to overwrite files.
@@ -534,7 +540,7 @@ func (e *editTool) deleteContent(ctx context.Context, filePath, oldString string
 	oldContent := string(content)
 
 	// 空白文字を無視してマッチングを行う
-	start, end, found := findMatchIgnoringWhitespace(oldContent, oldString)
+	start, end, found := findMatchIgnoringWhitespaceEnhanced(oldContent, oldString)
 	if !found {
 		return NewTextErrorResponse("old_string not found in file when ignoring whitespace differences"), nil
 	}
@@ -650,7 +656,7 @@ func (e *editTool) replaceContent(ctx context.Context, filePath, oldString, newS
 	oldContent := string(content)
 
 	// 空白文字を無視してマッチングを行う
-	start, end, found := findMatchIgnoringWhitespace(oldContent, oldString)
+	start, end, found := findMatchIgnoringWhitespaceEnhanced(oldContent, oldString)
 	if !found {
 		return NewTextErrorResponse("old_string not found in file when ignoring whitespace differences"), nil
 	}
@@ -747,18 +753,39 @@ func isWhitespaceExceptNewline(r rune) bool {
 	return unicode.IsSpace(r) && r != '\n' && r != '\r'
 }
 
-// 2025.06.15 Kawata updated replace-delete-logic
-// buildIndexMap は文字列から空白文字を除去し、元のインデックスとのマッピングを作成する
-func buildIndexMap(content string) (stripped string, indices []int) {
+// // 2025.06.15 Kawata updated replace-delete-logic
+// // buildIndexMap は文字列から空白文字を除去し、元のインデックスとのマッピングを作成する
+// func buildIndexMap(content string) (stripped string, indices []int) {
+// 	var sb strings.Builder
+// 	indices = make([]int, 0, utf8.RuneCountInString(content))
+// 	for i, r := range content {
+// 		if !isWhitespaceExceptNewline(r) {
+// 			sb.WriteRune(r)
+// 			indices = append(indices, i)
+// 		}
+// 	}
+// 	return sb.String(), indices
+// }
+
+// 2025.06.15 Kawata updated replace-delete-logic (Enhanced UTF-8 support)
+// buildIndexMapEnhanced は文字列から空白文字を除去し、各ルーンの詳細な位置情報を保持する
+func buildIndexMapEnhanced(content string) (stripped string, runeInfos []RuneInfo) {
 	var sb strings.Builder
-	indices = make([]int, 0, utf8.RuneCountInString(content))
-	for i, r := range content {
+	runeInfos = make([]RuneInfo, 0, utf8.RuneCountInString(content))
+
+	byteIdx := 0
+	for _, r := range content {
+		runeSize := utf8.RuneLen(r)
 		if !isWhitespaceExceptNewline(r) {
 			sb.WriteRune(r)
-			indices = append(indices, i)
+			runeInfos = append(runeInfos, RuneInfo{
+				Start: byteIdx,
+				End:   byteIdx + runeSize,
+			})
 		}
+		byteIdx += runeSize
 	}
-	return sb.String(), indices
+	return sb.String(), runeInfos
 }
 
 // 2025.06.15 Kawata updated replace-delete-logic
@@ -813,19 +840,56 @@ func findLastRuneIndex(runes, pattern []rune) int {
 	return -1
 }
 
-// 2025.06.15 Kawata updated replace-delete-logic
-// findMatchIgnoringWhitespace は改行以外の空白文字を無視してマッチングを行い、元の文字列でのインデックスを返す
-func findMatchIgnoringWhitespace(content, pattern string) (start, end int, ok bool) {
-	strippedContent, indices := buildIndexMap(content)
+// // 2025.06.15 Kawata updated replace-delete-logic
+// // findMatchIgnoringWhitespace は改行以外の空白文字を無視してマッチングを行い、元の文字列でのインデックスを返す
+// func findMatchIgnoringWhitespace(content, pattern string) (start, end int, ok bool) {
+// 	strippedContent, indices := buildIndexMap(content)
+// 	strippedPattern := removeWhitespace(pattern)
+
+// 	if len(strippedPattern) == 0 {
+// 		return 0, 0, false
+// 	}
+
+// 	// 整合性チェック
+// 	if utf8.RuneCountInString(strippedContent) != len(indices) {
+// 		fmt.Printf("findMatchIgnoringWhitespace - length mismatch: strippedContent runes=%d, indices=%d\n", utf8.RuneCountInString(strippedContent), len(indices))
+// 		return 0, 0, false
+// 	}
+
+// 	// ルーンスライスに変換
+// 	runes := []rune(strippedContent)
+// 	patternRunes := []rune(strippedPattern)
+
+// 	// ルーン単位で検索
+// 	firstRuneIdx := findRuneIndex(runes, patternRunes)
+// 	if firstRuneIdx == -1 {
+// 		return 0, 0, false
+// 	}
+
+// 	lastRuneIdx := findLastRuneIndex(runes, patternRunes)
+// 	if firstRuneIdx != lastRuneIdx {
+// 		return 0, 0, false
+// 	}
+
+// 	// 元のインデックス計算
+// 	startIdx := indices[firstRuneIdx]
+// 	endStrippedIdx := firstRuneIdx + len(patternRunes) - 1
+// 	var endIdx int
+// 	if endStrippedIdx < len(indices) {
+// 		endIdx = indices[endStrippedIdx] + 1
+// 	} else {
+// 		endIdx = len(content)
+// 	}
+
+// 	return startIdx, endIdx, true
+// }
+
+// 拡張版のfindMatchIgnoringWhitespace（より安全な実装）
+func findMatchIgnoringWhitespaceEnhanced(content, pattern string) (start, end int, ok bool) {
+	strippedContent, runeInfos := buildIndexMapEnhanced(content)
 	strippedPattern := removeWhitespace(pattern)
 
 	if len(strippedPattern) == 0 {
-		return 0, 0, false
-	}
-
-	// 整合性チェック
-	if utf8.RuneCountInString(strippedContent) != len(indices) {
-		fmt.Printf("findMatchIgnoringWhitespace - length mismatch: strippedContent runes=%d, indices=%d\n", utf8.RuneCountInString(strippedContent), len(indices))
 		return 0, 0, false
 	}
 
@@ -844,15 +908,10 @@ func findMatchIgnoringWhitespace(content, pattern string) (start, end int, ok bo
 		return 0, 0, false
 	}
 
-	// 元のインデックス計算
-	startIdx := indices[firstRuneIdx]
+	// UTF-8セーフなインデックス計算
+	startIdx := runeInfos[firstRuneIdx].Start
 	endStrippedIdx := firstRuneIdx + len(patternRunes) - 1
-	var endIdx int
-	if endStrippedIdx < len(indices) {
-		endIdx = indices[endStrippedIdx] + 1
-	} else {
-		endIdx = len(content)
-	}
+	endIdx := runeInfos[endStrippedIdx].End
 
 	return startIdx, endIdx, true
 }
