@@ -150,6 +150,11 @@ func (e *editTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error)
 	// }
 	wd := config.WorkingDirectory()
 	params.FilePath = filepath.Join(wd, params.FilePath)
+	// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+	if !strings.HasPrefix(params.FilePath, "./") {
+		params.FilePath = strings.TrimPrefix(params.FilePath, "/")
+		params.FilePath = fmt.Sprintf("./%s", params.FilePath)
+	}
 
 	var response ToolResponse
 	var err error

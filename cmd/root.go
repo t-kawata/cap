@@ -34,9 +34,6 @@ to assist developers in writing, debugging, and understanding code directly from
   # Run with debug logging
   cap -d
 
-  # Run with debug logging in a specific directory
-  cap -d -c /path/to/project
-
   # Print version
   cap -v
 
@@ -59,7 +56,9 @@ to assist developers in writing, debugging, and understanding code directly from
 
 		// Load the config
 		debug, _ := cmd.Flags().GetBool("debug")
-		cwd, _ := cmd.Flags().GetString("cwd")
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// cwd, _ := cmd.Flags().GetString("cwd")
+		cwd := "./"
 		prompt, _ := cmd.Flags().GetString("prompt")
 		outputFormat, _ := cmd.Flags().GetString("output-format")
 		quiet, _ := cmd.Flags().GetBool("quiet")
@@ -69,20 +68,21 @@ to assist developers in writing, debugging, and understanding code directly from
 			return fmt.Errorf("invalid format option: %s\n%s", outputFormat, format.GetHelpText())
 		}
 
-		if cwd != "" {
-			err := os.Chdir(cwd)
-			if err != nil {
-				return fmt.Errorf("failed to change directory: %v", err)
-			}
-		}
-		if cwd == "" {
-			// c, err := os.Getwd()
-			// if err != nil {
-			// 	return fmt.Errorf("failed to get current working directory: %v", err)
-			// }
-			// cwd = c
-			cwd = "./"
-		}
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// if cwd != "" {
+		// 	err := os.Chdir(cwd)
+		// 	if err != nil {
+		// 		return fmt.Errorf("failed to change directory: %v", err)
+		// 	}
+		// }
+		// if cwd == "" {
+		// 	// c, err := os.Getwd()
+		// 	// if err != nil {
+		// 	// 	return fmt.Errorf("failed to get current working directory: %v", err)
+		// 	// }
+		// 	// cwd = c
+		// 	cwd = "./"
+		// }
 		_, err := config.Load(cwd, debug)
 		if err != nil {
 			return err
@@ -293,7 +293,8 @@ func init() {
 	rootCmd.Flags().BoolP("help", "h", false, "Help")
 	rootCmd.Flags().BoolP("version", "v", false, "Version")
 	rootCmd.Flags().BoolP("debug", "d", false, "Debug")
-	rootCmd.Flags().StringP("cwd", "c", "", "Current working directory")
+	// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+	// rootCmd.Flags().StringP("cwd", "c", "", "Current working directory")
 	rootCmd.Flags().StringP("prompt", "p", "", "Prompt to run in non-interactive mode")
 
 	// Add format flag with validation logic

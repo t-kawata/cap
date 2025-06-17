@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -150,13 +149,18 @@ func runRipgrep(cmd *exec.Cmd, searchRoot string, limit int) ([]string, error) {
 	}
 
 	var matches []string
-	for _, p := range bytes.Split(out, []byte{0}) {
+	for p := range bytes.SplitSeq(out, []byte{0}) {
 		if len(p) == 0 {
 			continue
 		}
 		absPath := string(p)
-		if !filepath.IsAbs(absPath) {
-			absPath = filepath.Join(searchRoot, absPath)
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// if !filepath.IsAbs(absPath) {
+		// 	absPath = filepath.Join(searchRoot, absPath)
+		// }
+		if !strings.HasPrefix(absPath, "./") {
+			absPath = strings.TrimPrefix(absPath, "/")
+			absPath = fmt.Sprintf("./%s", absPath)
 		}
 		if fileutil.SkipHidden(absPath) {
 			continue

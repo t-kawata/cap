@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/cap-ai/cap/internal/config"
@@ -100,9 +101,15 @@ func (p *patchTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error
 	filesToRead := diff.IdentifyFilesNeeded(params.PatchText)
 	for _, filePath := range filesToRead {
 		absPath := filePath
-		if !filepath.IsAbs(absPath) {
-			wd := config.WorkingDirectory()
-			absPath = filepath.Join(wd, absPath)
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// if !filepath.IsAbs(absPath) {
+		// 	wd := config.WorkingDirectory()
+		// 	absPath = filepath.Join(wd, absPath)
+		// }
+		absPath = filepath.Join(config.WorkingDirectory(), absPath)
+		if !strings.HasPrefix(absPath, "./") {
+			absPath = strings.TrimPrefix(absPath, "/")
+			absPath = fmt.Sprintf("./%s", absPath)
 		}
 
 		if getLastReadTime(absPath).IsZero() {
@@ -135,9 +142,15 @@ func (p *patchTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error
 	filesToAdd := diff.IdentifyFilesAdded(params.PatchText)
 	for _, filePath := range filesToAdd {
 		absPath := filePath
-		if !filepath.IsAbs(absPath) {
-			wd := config.WorkingDirectory()
-			absPath = filepath.Join(wd, absPath)
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// if !filepath.IsAbs(absPath) {
+		// 	wd := config.WorkingDirectory()
+		// 	absPath = filepath.Join(wd, absPath)
+		// }
+		absPath = filepath.Join(config.WorkingDirectory(), absPath)
+		if !strings.HasPrefix(absPath, "./") {
+			absPath = strings.TrimPrefix(absPath, "/")
+			absPath = fmt.Sprintf("./%s", absPath)
 		}
 
 		_, err := os.Stat(absPath)
@@ -152,9 +165,15 @@ func (p *patchTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error
 	currentFiles := make(map[string]string)
 	for _, filePath := range filesToRead {
 		absPath := filePath
-		if !filepath.IsAbs(absPath) {
-			wd := config.WorkingDirectory()
-			absPath = filepath.Join(wd, absPath)
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// if !filepath.IsAbs(absPath) {
+		// 	wd := config.WorkingDirectory()
+		// 	absPath = filepath.Join(wd, absPath)
+		// }
+		absPath = filepath.Join(config.WorkingDirectory(), absPath)
+		if !strings.HasPrefix(absPath, "./") {
+			absPath = strings.TrimPrefix(absPath, "/")
+			absPath = fmt.Sprintf("./%s", absPath)
 		}
 
 		content, err := os.ReadFile(absPath)
@@ -260,9 +279,15 @@ func (p *patchTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error
 	// Apply the changes to the filesystem
 	err = diff.ApplyCommit(commit, func(path string, content string) error {
 		absPath := path
-		if !filepath.IsAbs(absPath) {
-			wd := config.WorkingDirectory()
-			absPath = filepath.Join(wd, absPath)
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// if !filepath.IsAbs(absPath) {
+		// 	wd := config.WorkingDirectory()
+		// 	absPath = filepath.Join(wd, absPath)
+		// }
+		absPath = filepath.Join(config.WorkingDirectory(), absPath)
+		if !strings.HasPrefix(absPath, "./") {
+			absPath = strings.TrimPrefix(absPath, "/")
+			absPath = fmt.Sprintf("./%s", absPath)
 		}
 
 		// Create parent directories if needed
@@ -274,9 +299,15 @@ func (p *patchTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error
 		return os.WriteFile(absPath, []byte(content), 0o644)
 	}, func(path string) error {
 		absPath := path
-		if !filepath.IsAbs(absPath) {
-			wd := config.WorkingDirectory()
-			absPath = filepath.Join(wd, absPath)
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// if !filepath.IsAbs(absPath) {
+		// 	wd := config.WorkingDirectory()
+		// 	absPath = filepath.Join(wd, absPath)
+		// }
+		absPath = filepath.Join(config.WorkingDirectory(), absPath)
+		if !strings.HasPrefix(absPath, "./") {
+			absPath = strings.TrimPrefix(absPath, "/")
+			absPath = fmt.Sprintf("./%s", absPath)
 		}
 		return os.Remove(absPath)
 	})
@@ -291,9 +322,15 @@ func (p *patchTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error
 
 	for path, change := range commit.Changes {
 		absPath := path
-		if !filepath.IsAbs(absPath) {
-			wd := config.WorkingDirectory()
-			absPath = filepath.Join(wd, absPath)
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// if !filepath.IsAbs(absPath) {
+		// 	wd := config.WorkingDirectory()
+		// 	absPath = filepath.Join(wd, absPath)
+		// }
+		absPath = filepath.Join(config.WorkingDirectory(), absPath)
+		if !strings.HasPrefix(absPath, "./") {
+			absPath = strings.TrimPrefix(absPath, "/")
+			absPath = fmt.Sprintf("./%s", absPath)
 		}
 		changedFiles = append(changedFiles, absPath)
 

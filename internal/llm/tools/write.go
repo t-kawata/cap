@@ -117,6 +117,11 @@ func (w *writeTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error
 	// 	filePath = filepath.Join(config.WorkingDirectory(), filePath)
 	// }
 	filePath = filepath.Join(config.WorkingDirectory(), filePath)
+	// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+	if !strings.HasPrefix(filePath, "./") {
+		filePath = strings.TrimPrefix(filePath, "/")
+		filePath = fmt.Sprintf("./%s", filePath)
+	}
 
 	fileInfo, err := os.Stat(filePath)
 	if err == nil {

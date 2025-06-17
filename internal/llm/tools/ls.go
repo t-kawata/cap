@@ -99,8 +99,14 @@ func (l *lsTool) Run(ctx context.Context, call ToolCall) (ToolResponse, error) {
 		searchPath = config.WorkingDirectory()
 	}
 
-	if !filepath.IsAbs(searchPath) {
-		searchPath = filepath.Join(config.WorkingDirectory(), searchPath)
+	// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+	// if !filepath.IsAbs(searchPath) {
+	// 	searchPath = filepath.Join(config.WorkingDirectory(), searchPath)
+	// }
+	searchPath = filepath.Join(config.WorkingDirectory(), searchPath)
+	if !strings.HasPrefix(searchPath, "./") {
+		searchPath = strings.TrimPrefix(searchPath, "/")
+		searchPath = fmt.Sprintf("./%s", searchPath)
 	}
 
 	if _, err := os.Stat(searchPath); os.IsNotExist(err) {

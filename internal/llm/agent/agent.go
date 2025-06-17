@@ -405,15 +405,16 @@ func (a *agent) completeContent(ctx context.Context, content string) (lastConten
 			logging.InfoPersist(fmt.Sprintf("Translated: '%s'", body))
 		}
 		// 2025.06.15 Kawata added default-no-think for qwen3
-		model := a.Model()
-		lowerModelName := strings.ToLower(model.Name)
-		if strings.Contains(lowerModelName, "qwen3") {
-			if slices.Contains(detectedPrefixes, PREFIX_TK) { // if has /tk
-				body = fmt.Sprintf("/think %s", body)
-			} else {
-				body = fmt.Sprintf("/no_think %s", body)
-			}
-		}
+		// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+		// model := a.Model()
+		// lowerModelName := strings.ToLower(model.Name)
+		// if strings.Contains(lowerModelName, "qwen3") {
+		// 	if slices.Contains(detectedPrefixes, PREFIX_TK) { // if has /tk
+		// 		body = fmt.Sprintf("/think %s", body)
+		// 	} else {
+		// 		body = fmt.Sprintf("/no_think %s", body)
+		// 	}
+		// }
 		content = body
 	}
 	lastContent = content
@@ -531,25 +532,27 @@ out:
 		return assistantMsg, nil, nil
 	}
 	// 2025.06.15 /think /no_think handling also for tool-call-results
-	model := a.Model()
-	lowerModelName := strings.ToLower(model.Name)
-	isQwen3 := strings.Contains(lowerModelName, "qwen3")
-	isQwen3Think := false
-	if isQwen3 {
-		isQwen3Think = slices.Contains(detectedPrefixes, PREFIX_TK)
-	}
+	// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+	// model := a.Model()
+	// lowerModelName := strings.ToLower(model.Name)
+	// isQwen3 := strings.Contains(lowerModelName, "qwen3")
+	// isQwen3Think := false
+	// if isQwen3 {
+	// 	isQwen3Think = slices.Contains(detectedPrefixes, PREFIX_TK)
+	// }
 
 	parts := make([]message.ContentPart, 0)
-	for _, tr := range toolResults {
-		// 2025.06.15 /think /no_think handling also for tool-call-results
-		if isQwen3Think {
-			tr.Content = fmt.Sprintf("/think %s", tr.Content)
-		} else if isQwen3 {
-			tr.Content = fmt.Sprintf("/no_think %s", tr.Content)
-		}
+	// 2025.06.17 Kawata disabled /think /no_think for qwen3 and force './' for working-dir
+	// for _, tr := range toolResults {
+	// 	// 2025.06.15 /think /no_think handling also for tool-call-results
+	// 	if isQwen3Think {
+	// 		tr.Content = fmt.Sprintf("/think %s", tr.Content)
+	// 	} else if isQwen3 {
+	// 		tr.Content = fmt.Sprintf("/no_think %s", tr.Content)
+	// 	}
 
-		parts = append(parts, tr)
-	}
+	// 	parts = append(parts, tr)
+	// }
 	msg, err := a.messages.Create(context.Background(), assistantMsg.SessionID, message.CreateMessageParams{
 		Role:  message.Tool,
 		Parts: parts,
