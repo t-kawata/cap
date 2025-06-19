@@ -3,7 +3,7 @@ package version
 import "runtime/debug"
 
 // Build-time parameters set via -ldflags
-var Version = "v1.0.6"
+var Version = "v1.0.7"
 
 // A user may install pug using `go install github.com/cap-ai/cap@latest`.
 // without -ldflags, in which case the version above is unset. As a workaround

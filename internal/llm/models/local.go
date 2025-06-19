@@ -120,12 +120,14 @@ type localModel struct {
 
 // 2025.06.15 Kawata added orgEndpoint to fetch details such as context_length from ollama
 func listLocalModels(orgEndpoint string, modelsEndpoint string) []localModel {
+	modelList := localModelList{}
 	res, err := http.Get(modelsEndpoint)
 	if err != nil {
 		logging.Debug("Failed to list local models",
 			"error", err,
 			"endpoint", modelsEndpoint,
 		)
+		return modelList.Data
 	}
 	defer res.Body.Close()
 
@@ -134,17 +136,18 @@ func listLocalModels(orgEndpoint string, modelsEndpoint string) []localModel {
 			"status", res.StatusCode,
 			"endpoint", modelsEndpoint,
 		)
+		return modelList.Data
 	}
 
-	var modelList localModelList
 	if err = json.NewDecoder(res.Body).Decode(&modelList); err != nil {
 		logging.Debug("Failed to list local models",
 			"error", err,
 			"endpoint", modelsEndpoint,
 		)
+		return modelList.Data
 	}
 
-	var supportedModels []localModel
+	supportedModels := []localModel{}
 	for _, model := range modelList.Data {
 		if strings.HasSuffix(modelsEndpoint, lmStudioBetaModelsPath) {
 			if model.Object != "model" || model.Type != "llm" {
@@ -154,11 +157,9 @@ func listLocalModels(orgEndpoint string, modelsEndpoint string) []localModel {
 					"object", model.Object,
 					"type", model.Type,
 				)
-
 				continue
 			}
 		}
-
 		supportedModels = append(supportedModels, model)
 	}
 
@@ -210,7 +211,6 @@ func listLocalModels(orgEndpoint string, modelsEndpoint string) []localModel {
 	} else {
 		logging.Debug("Failed to parse orgEndpoint", "error", err, "orgEndpoint", orgEndpoint)
 	}
-
 	return supportedModels
 }
 

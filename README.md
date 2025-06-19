@@ -170,10 +170,10 @@ $ cap init
             "command": "html-languageserver",
             "args": ["--stdio"]
         },
-        "css": {    
-            "disabled": false,    
-            "command": "css-languageserver",    
-            "args": ["--stdio"]    
+        "css": {
+            "disabled": false,
+            "command": "css-languageserver",
+            "args": ["--stdio"]
         },
         "json": {
             "disabled": false,
@@ -212,6 +212,7 @@ gemini-2.0-flash
 gemini-2.0-flash-lite
 gemini-2.5
 gemini-2.5-flash
+gemini-2.5-flash-lite
 gpt-4.1
 gpt-4.1-mini
 gpt-4.1-nano
