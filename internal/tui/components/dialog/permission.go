@@ -173,9 +173,13 @@ func (p *permissionDialogCmp) renderButtons() string {
 		denyStyle = denyStyle.Background(t.Primary()).Foreground(t.Background())
 	}
 
-	allowButton := allowStyle.Padding(0, 1).Render("Allow (a)")
+	// allowButton := allowStyle.Padding(0, 1).Render("Allow (a)")
+	// allowSessionButton := allowSessionStyle.Padding(0, 1).Render("Allow for session (s)")
+	// denyButton := denyStyle.Padding(0, 1).Render("Deny (d)")
+
+	allowButton := allowStyle.Padding(0, 1).Render("承認 (a)")
 	allowSessionButton := allowSessionStyle.Padding(0, 1).Render("Allow for session (s)")
-	denyButton := denyStyle.Padding(0, 1).Render("Deny (d)")
+	denyButton := denyStyle.Padding(0, 1).Render("拒否 (d)")
 
 	content := lipgloss.JoinHorizontal(
 		lipgloss.Left,

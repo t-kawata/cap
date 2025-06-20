@@ -110,13 +110,17 @@ func (m InitDialogCmp) View() string {
 		Foreground(t.Text()).
 		Width(maxWidth).
 		Padding(0, 1).
-		Render("Initialization generates a new CAP.md file that contains information about your codebase, this file serves as memory for each project, you can freely add to it to help the agents be better at their job.")
+		// Render("Initialization generates a new CAP.md file that contains information about your codebase, this file serves as memory for each project, you can freely add to it to help the agents be better at their job.")
+		Render("" +
+			"プロジェクト初期化処理は、プロジェクト全体のコードに関する情報を最初に記憶ファイルにまとめ上げることです。" +
+			"これはプロジェクトの記憶として機能し、システムはこの記憶を利用して既存スタイルや参照ルールを逸脱しないように行動します。" +
+			"記憶ファイルに直接ルールを書き込んでも問題ありません。\n※ 記憶ファイル = CAP.md")
 
 	question := baseStyle.
 		Foreground(t.Text()).
 		Width(maxWidth).
 		Padding(1, 1).
-		Render("Would you like to initialize this project?")
+		Render("プロジェクト初期化を開始してもよろしいですか？")
 
 	maxWidth = min(maxWidth, m.width-10)
 	yesStyle := baseStyle
